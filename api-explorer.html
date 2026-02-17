@@ -30,6 +30,7 @@ body{
   display:grid; grid-template-columns:290px 1fr; grid-template-rows:60px 1fr;
   height:100vh; overflow:hidden; position:relative;
 }
+
 body::after{
   content:''; position:fixed; inset:0;
   background:var(--scanline); pointer-events:none; z-index:9999; opacity:0.4;
