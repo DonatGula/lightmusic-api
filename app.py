@@ -4,6 +4,7 @@ from routes.song import song_bp
 from routes.stream import stream_bp
 from routes.lyrics import lyrics_bp
 from routes.charts import charts_bp
+from flask import send_file
 
 app = Flask(__name__)
 
@@ -12,6 +13,10 @@ app.register_blueprint(song_bp)
 app.register_blueprint(stream_bp)
 app.register_blueprint(lyrics_bp)
 app.register_blueprint(charts_bp)
+
+@app.route('/api')
+def explorer():
+    return send_file('api-explorer.html')
 
 @app.route('/')
 def index():
