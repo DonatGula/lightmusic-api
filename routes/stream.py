@@ -10,22 +10,23 @@ stream_bp = Blueprint('stream', __name__)
 ytm = YTMusic()
 
 def get_ydl_opts():
-    """Buat ydl_opts dengan cookies dari environment variable."""
     opts = {
-        'format': 'bestaudio/best',
+        # Urutan prioritas format — coba satu per satu sampai berhasil
+        'format': 'bestaudio/bestaudio*',
         'quiet': True,
         'no_warnings': True,
         'skip_download': True,
+        # Jangan filter format yang tidak dikenal
+        'allow_unplayable_formats': False,
         'extractor_args': {
             'youtube': {
-                'player_client': ['tv_embedded', 'web'],
+                'player_client': ['android', 'tv_embedded', 'web'],
             }
         },
     }
 
     cookies_content = os.environ.get('YT_COOKIES', '')
     if cookies_content:
-        # Tulis cookies ke file temporary di server
         tmp = tempfile.NamedTemporaryFile(
             mode='w', suffix='.txt', delete=False, encoding='utf-8'
         )
@@ -33,7 +34,6 @@ def get_ydl_opts():
         tmp.close()
         opts['cookiefile'] = tmp.name
     elif os.path.exists('cookies.txt'):
-        # Fallback ke file lokal (untuk development)
         opts['cookiefile'] = 'cookies.txt'
 
     return opts
