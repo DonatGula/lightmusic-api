@@ -501,7 +501,7 @@ async function quickPlay(id, title, artist) {
   if (playingId===id && !audio.paused) { audio.pause(); return; }
 
   document.querySelectorAll('.qs').forEach(e=>e.classList.remove('playing'));
-  const quick = document.querySelector(`.qs[id*="${id}"]`);
+  const quick = document.querySelector(`#qs${['kitkOTxGfjI','kXQRVbRfF4s','5a0EkeqWNBs'].indexOf(id)}`);
   if (quick) quick.classList.add('playing');
 
   document.getElementById('pTitle').textContent  = title;
@@ -512,34 +512,24 @@ async function quickPlay(id, title, artist) {
   document.getElementById('playBtn').disabled = true;
 
   try {
-    const r = await fetch(`${BASE}/stream/${id}`);
-    const d = await r.json();
-
-    if (d.status!=='success' || !d.data?.stream_url) {
-      throw new Error(d.message||'Stream URL kosong');
-    }
-
-    // Update thumb
-    if (d.data.thumbnail) {
-      document.getElementById('pThumb').innerHTML =
-        `<img src="${d.data.thumbnail}" onerror="this.parentElement.textContent='♪'">`;
-    }
-
     playingId = id;
 
-    // Reset audio sepenuhnya
+    // Reset audio
     audio.pause();
     audio.src = '';
     audio.load();
-
     await new Promise(r => setTimeout(r, 150));
 
-    audio.src = d.data.stream_url;
+    // Langsung pakai /play proxy — tidak perlu fetch /stream dulu
+    audio.src = `${BASE}/play/${id}`;
 
     await new Promise((resolve, reject) => {
       const onCanPlay = () => { cleanup(); resolve(); };
-      const onError   = () => { cleanup(); reject(new Error('Format tidak didukung')); };
-      const cleanup   = () => { audio.removeEventListener('canplay', onCanPlay); audio.removeEventListener('error', onError); };
+      const onError   = (e) => { cleanup(); reject(new Error('Gagal load audio')); };
+      const cleanup   = () => {
+        audio.removeEventListener('canplay', onCanPlay);
+        audio.removeEventListener('error', onError);
+      };
       audio.addEventListener('canplay', onCanPlay);
       audio.addEventListener('error', onError);
       audio.load();
@@ -552,14 +542,11 @@ async function quickPlay(id, title, artist) {
   } catch(e) {
     document.getElementById('pStatus').textContent = 'ERROR';
     document.getElementById('playBtn').textContent = '▶';
-    toast(e.message.includes('interact')||e.message.includes('play')
-      ? 'Klik ▶ untuk mulai putar'
-      : 'Error: '+e.message);
+    toast('Klik ▶ untuk mulai putar');
   } finally {
     document.getElementById('playBtn').disabled = false;
   }
 }
-
 async function infoOf(id) {
   document.getElementById('vidId').value = id;
   const url = `${BASE}/song/${id}`;

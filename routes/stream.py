@@ -43,31 +43,41 @@ def do_stream(video_id):
         return success(data)
     except Exception as e:
         return error(str(e), 500)
-
-
+    
 @stream_bp.route('/play/<video_id>')
 def play(video_id):
-    """Proxy audio stream — Flutter tinggal pakai URL ini."""
     try:
-        data = get_audio_stream(video_id)
-        stream_url = data['stream_url']
+        from pytubefix import YouTube
+        yt  = YouTube(f"https://www.youtube.com/watch?v={video_id}")
 
-        req = requests.get(stream_url, stream=True, headers={
-            'User-Agent':  'Mozilla/5.0',
-            'Referer':     'https://www.youtube.com/',
-        }, timeout=10)
+        # Prioritas: mp4 dulu (paling support di semua browser)
+        stream = (
+            yt.streams.filter(only_audio=True, mime_type="audio/mp4").order_by('abr').last() or
+            yt.streams.filter(only_audio=True).order_by('abr').last()
+        )
+
+        if not stream:
+            return error("Tidak ada stream tersedia", 404)
+
+        import requests as req
+        r = req.get(stream.url, stream=True, headers={
+            'User-Agent': 'Mozilla/5.0',
+            'Referer': 'https://www.youtube.com/',
+        }, timeout=15)
 
         def generate():
-            for chunk in req.iter_content(chunk_size=8192):
-                yield chunk
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    yield chunk
 
         return Response(
             generate(),
-            content_type=req.headers.get('Content-Type', 'audio/mp4'),
+            content_type='audio/mp4',   # ← paksa mp4, bukan webm
             headers={
                 'Accept-Ranges':  'bytes',
-                'Content-Length': req.headers.get('Content-Length', ''),
+                'Content-Length': r.headers.get('Content-Length', ''),
                 'Cache-Control':  'no-cache',
+                'Access-Control-Allow-Origin': '*',   # ← izinkan browser load
             }
         )
     except Exception as e:
