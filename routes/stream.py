@@ -131,3 +131,42 @@ def download(video_id):
         })
     except Exception as e:
         return error(str(e), 500)
+    
+@stream_bp.route('/download-file/<video_id>')
+def download_file(video_id):
+    """
+    Railway yang download dari Google lalu pipe ke Flutter.
+    Solve masalah 403 IP mismatch saat Flutter download langsung.
+    """
+    try:
+        stream, yt = get_best_stream(video_id)
+        
+        import re
+        safe_title = re.sub(r'[^\w\s-]', '', yt.title).strip()
+        safe_title = re.sub(r'\s+', '_', safe_title)
+        filename   = f"{safe_title}.mp3"
+
+        def generate():
+            r = requests.get(
+                stream.url,
+                headers=HEADERS,
+                stream=True,
+                timeout=60,
+            )
+            for chunk in r.iter_content(chunk_size=65536):  # 64KB chunks
+                if chunk:
+                    yield chunk
+
+        return Response(
+            generate(),
+            status=200,
+            headers={
+                'Content-Type':                'audio/mp4',
+                'Content-Disposition':         f'attachment; filename="{filename}"',
+                'Content-Length':              str(stream.filesize or ''),
+                'Access-Control-Allow-Origin': '*',
+                'Cache-Control':               'no-cache',
+            }
+        )
+    except Exception as e:
+        return error(str(e), 500)
