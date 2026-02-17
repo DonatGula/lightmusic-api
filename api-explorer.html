@@ -1,471 +1,338 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" data-theme="dark">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LightMusic API Explorer</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:        #080b10;
-    --surface:   #0d1117;
-    --card:      #111820;
-    --border:    #1e2d3d;
-    --accent:    #00d4ff;
-    --accent2:   #ff6b35;
-    --accent3:   #7dff8a;
-    --text:      #cdd9e5;
-    --muted:     #4a6070;
-    --success:   #3fb950;
-    --error:     #f85149;
-    --warning:   #d29922;
-    --mono:      'JetBrains Mono', monospace;
-    --sans:      'Syne', sans-serif;
-  }
+[data-theme="dark"] {
+  --bg:#0a0a0f; --bg2:#0f0f1a; --surface:#12121f; --card:#1a1a2e;
+  --border:#2a2a4a; --border2:#3a3a6a;
+  --accent:#00ff88; --accent2:#ff6b00; --accent3:#00cfff; --pink:#ff00aa; --yellow:#ffd700;
+  --text:#c8ffc8; --text2:#88aa88; --muted:#445544;
+  --success:#00ff88; --error:#ff4444;
+  --glow:0 0 10px #00ff8866; --glow2:0 0 10px #ff6b0066; --glow3:0 0 10px #00cfff66;
+  --scanline:repeating-linear-gradient(0deg,transparent,transparent 2px,#00000015 2px,#00000015 4px);
+}
+[data-theme="light"] {
+  --bg:#f0ede0; --bg2:#e8e4d0; --surface:#ddd8c0; --card:#ccc8b0;
+  --border:#aaa890; --border2:#888670;
+  --accent:#006622; --accent2:#cc4400; --accent3:#004488; --pink:#880044; --yellow:#886600;
+  --text:#1a2a1a; --text2:#445544; --muted:#889988;
+  --success:#006622; --error:#cc2200;
+  --glow:none; --glow2:none; --glow3:none; --scanline:none;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:'Share Tech Mono',monospace;
+  display:grid; grid-template-columns:290px 1fr; grid-template-rows:60px 1fr;
+  height:100vh; overflow:hidden; position:relative;
+}
+body::after{
+  content:''; position:fixed; inset:0;
+  background:var(--scanline); pointer-events:none; z-index:9999; opacity:0.4;
+}
+body::before{
+  content:''; position:fixed; inset:0;
+  background:radial-gradient(ellipse at center,transparent 60%,#00000088 100%);
+  pointer-events:none; z-index:9998;
+}
+::-webkit-scrollbar{width:5px;height:5px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:var(--border2);}
+*{scrollbar-width:thin;scrollbar-color:var(--border2) var(--bg);}
 
-  * { margin:0; padding:0; box-sizing:border-box; }
+/* TOPBAR */
+.topbar{
+  grid-column:1/-1; background:var(--surface);
+  border-bottom:2px solid var(--accent);
+  display:flex; align-items:center; padding:0 16px; gap:12px;
+  box-shadow:0 2px 20px #00ff8833; z-index:100;
+}
+.logo{
+  font-family:'Orbitron',monospace; font-size:15px; font-weight:900;
+  color:var(--accent); text-shadow:var(--glow); letter-spacing:2px;
+  display:flex; align-items:center; gap:6px; white-space:nowrap;
+}
+.lb{color:var(--accent2);font-size:20px;text-shadow:var(--glow2);}
+.url-bar{
+  flex:1; background:var(--bg); border:1px solid var(--border2);
+  padding:6px 12px; font-family:'Share Tech Mono',monospace;
+  font-size:12px; color:var(--accent3); text-shadow:var(--glow3);
+  overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+}
+.url-bar::before{content:'> ';color:var(--accent);text-shadow:var(--glow);}
+.theme-btn{
+  background:var(--card); border:1px solid var(--border2);
+  color:var(--text); padding:5px 12px;
+  font-family:'Share Tech Mono',monospace; font-size:11px;
+  cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+}
+.theme-btn:hover{border-color:var(--accent);color:var(--accent);text-shadow:var(--glow);}
+.dot{width:8px;height:8px;background:var(--accent);box-shadow:var(--glow);animation:blink 1.5s infinite;flex-shrink:0;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--sans);
-    min-height: 100vh;
-    display: grid;
-    grid-template-columns: 300px 1fr;
-    grid-template-rows: 56px 1fr;
-    height: 100vh;
-    overflow: hidden;
-  }
+/* SIDEBAR */
+.sidebar{background:var(--surface);border-right:2px solid var(--border);overflow-y:auto;}
+.sb{border-bottom:1px solid var(--border);padding:12px;}
+.sbt{
+  font-family:'Orbitron',monospace; font-size:9px; font-weight:700;
+  color:var(--accent2); text-shadow:var(--glow2); letter-spacing:2px;
+  margin-bottom:10px; display:flex; align-items:center; gap:6px;
+}
+.sbt::before{content:'//';color:var(--muted);}
+.ri{
+  width:100%; background:var(--bg); border:1px solid var(--border2);
+  color:var(--accent3); padding:8px 10px;
+  font-family:'Share Tech Mono',monospace; font-size:12px;
+  outline:none; transition:border-color 0.2s,box-shadow 0.2s;
+  margin-bottom:6px; text-shadow:var(--glow3);
+}
+.ri:focus{border-color:var(--accent3);box-shadow:var(--glow3);}
+.ri::placeholder{color:var(--muted);}
+.rs{
+  width:100%; background:var(--bg); border:1px solid var(--border2);
+  color:var(--text); padding:8px 10px;
+  font-family:'Share Tech Mono',monospace; font-size:12px;
+  outline:none; cursor:pointer; margin-bottom:6px;
+}
+.ep{
+  display:flex; align-items:center; gap:8px; padding:8px;
+  cursor:pointer; border:1px solid transparent; transition:all 0.15s; margin-bottom:3px;
+}
+.ep:hover{background:var(--card);border-color:var(--border2);}
+.ep.active{background:var(--card);border-color:var(--accent);box-shadow:inset 2px 0 0 var(--accent);}
+.em{
+  font-family:'Orbitron',monospace; font-size:9px; font-weight:700;
+  padding:2px 6px; letter-spacing:1px;
+}
+.get{color:var(--accent3);border:1px solid var(--accent3);text-shadow:var(--glow3);}
+.ep-path{font-size:12px;color:var(--text);}
+.ep-desc{font-size:10px;color:var(--muted);margin-top:1px;}
+.rbtn{
+  width:100%; background:var(--bg); border:2px solid var(--accent);
+  color:var(--accent); padding:10px;
+  font-family:'Orbitron',monospace; font-size:11px; font-weight:700;
+  letter-spacing:2px; cursor:pointer; transition:all 0.2s;
+  text-shadow:var(--glow); box-shadow:var(--glow);
+}
+.rbtn:hover:not(:disabled){background:var(--accent);color:var(--bg);text-shadow:none;box-shadow:none;}
+.rbtn:disabled{opacity:0.4;cursor:not-allowed;}
+.qs{
+  display:flex; align-items:center; gap:8px; padding:7px 6px;
+  cursor:pointer; border:1px solid transparent; transition:all 0.15s; margin-bottom:2px;
+}
+.qs:hover{background:var(--card);border-color:var(--accent2);}
+.qs.playing{border-color:var(--accent);background:var(--card);}
+.qn{font-family:'Orbitron',monospace;font-size:9px;color:var(--muted);width:16px;flex-shrink:0;}
+.qs.playing .qn{color:var(--accent);animation:blink 1s infinite;}
+.qt{font-size:11px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.qa{font-size:10px;color:var(--muted);}
 
-  /* ── TOPBAR ── */
-  .topbar {
-    grid-column: 1 / -1;
-    background: var(--surface);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    padding: 0 20px;
-    gap: 16px;
-    position: relative;
-    z-index: 10;
-  }
-  .logo {
-    display: flex; align-items: center; gap: 10px;
-    font-size: 16px; font-weight: 800; color: #fff;
-    letter-spacing: -0.5px;
-  }
-  .logo-icon {
-    width: 28px; height: 28px;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    border-radius: 8px;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px;
-  }
-  .logo span { color: var(--accent); }
+/* MAIN */
+.main{display:grid;grid-template-rows:1fr auto;overflow:hidden;background:var(--bg2);}
+.resp{overflow-y:auto;padding:16px;}
 
-  .topbar-url {
-    flex: 1;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 7px 14px;
-    font-family: var(--mono);
-    font-size: 12px;
-    color: var(--accent3);
-    display: flex; align-items: center; gap: 8px;
-    overflow: hidden;
-  }
-  .topbar-url span { color: var(--muted); font-size: 11px; flex-shrink: 0; }
-  .topbar-url .url-text {
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
+/* Empty */
+.empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px;text-align:center;}
+.big-sym{
+  font-family:'VT323',monospace; font-size:80px;
+  color:var(--accent); text-shadow:var(--glow); line-height:1;
+  animation:flicker 5s infinite;
+}
+@keyframes flicker{0%,94%,100%{opacity:1}95%{opacity:0.3}96%{opacity:1}97%{opacity:0.5}98%{opacity:1}}
+.big-sub{font-family:'VT323',monospace;font-size:24px;color:var(--accent2);text-shadow:var(--glow2);letter-spacing:4px;}
+.big-hint{font-size:11px;color:var(--muted);letter-spacing:1px;}
 
-  .topbar-badge {
-    padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 700;
-    background: #00d4ff15; color: var(--accent); border: 1px solid #00d4ff30;
-    letter-spacing: 0.5px;
-  }
+/* Response */
+.meta-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.rlabel{font-family:'Orbitron',monospace;font-size:10px;color:var(--accent2);letter-spacing:2px;}
+.stag{padding:2px 8px;font-size:11px;font-family:'Orbitron',monospace;font-weight:700;letter-spacing:1px;}
+.sok{color:var(--success);border:1px solid var(--success);text-shadow:var(--glow);}
+.serr{color:var(--error);border:1px solid var(--error);}
+.mpill{font-size:10px;color:var(--muted);border:1px solid var(--border);padding:2px 6px;}
+.mpill span{color:var(--text2);}
+.cbtn{
+  margin-left:auto; background:none; border:1px solid var(--border2);
+  color:var(--muted); font-family:'Share Tech Mono',monospace;
+  font-size:10px; padding:3px 8px; cursor:pointer; letter-spacing:1px; transition:all 0.2s;
+}
+.cbtn:hover{color:var(--accent);border-color:var(--accent);}
+.jw{
+  background:var(--bg); border:1px solid var(--border);
+  font-family:'Share Tech Mono',monospace; font-size:12.5px;
+  line-height:1.7; padding:14px; overflow-x:auto; white-space:pre;
+  animation:fin 0.3s ease; box-shadow:inset 0 0 30px #00000044;
+}
+@keyframes fin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.jk{color:#00cfff;text-shadow:0 0 8px #00cfff55;}
+.js{color:#aaffcc;}
+.jn{color:#ffd700;text-shadow:0 0 6px #ffd70044;}
+.jb{color:#ff6b6b;}
 
-  /* ── SIDEBAR ── */
-  .sidebar {
-    background: var(--surface);
-    border-right: 1px solid var(--border);
-    overflow-y: auto;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-  .sidebar::-webkit-scrollbar { width: 4px; }
-  .sidebar::-webkit-scrollbar-track { background: transparent; }
-  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+/* Search cards */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px;margin-top:12px;animation:fin 0.3s ease;}
+.scard{
+  background:var(--card); border:1px solid var(--border);
+  padding:10px; cursor:pointer; transition:all 0.15s; position:relative; overflow:hidden;
+}
+.scard::before{
+  content:''; position:absolute; top:0; left:0; right:0; height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent3));
+  transform:scaleX(0); transition:transform 0.2s;
+}
+.scard:hover{border-color:var(--accent);}
+.scard:hover::before{transform:scaleX(1);}
+.scard img{width:100%;aspect-ratio:1;object-fit:cover;margin-bottom:8px;display:block;}
+.scard-placeholder{width:100%;aspect-ratio:1;background:var(--bg);margin-bottom:8px;display:flex;align-items:center;justify-content:center;font-size:36px;}
+.scard-title{font-size:12px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+.scard-artist{font-size:11px;color:var(--muted);}
+.scard-btns{display:flex;gap:4px;margin-top:8px;}
+.sbtn{
+  flex:1; padding:4px; background:var(--bg); border:1px solid var(--border2);
+  color:var(--text2); font-family:'Share Tech Mono',monospace;
+  font-size:10px; cursor:pointer; transition:all 0.15s;
+}
+.sbtn.pb:hover{border-color:var(--accent);color:var(--accent);}
+.sbtn.ib:hover{border-color:var(--accent3);color:var(--accent3);}
 
-  .sidebar-section { padding: 16px; border-bottom: 1px solid var(--border); }
-  .sidebar-label {
-    font-size: 10px; font-weight: 700; letter-spacing: 1.5px;
-    color: var(--muted); text-transform: uppercase; margin-bottom: 10px;
-  }
+/* PLAYER */
+.player{
+  background:var(--surface); border-top:2px solid var(--accent);
+  padding:10px 16px; display:none; flex-direction:column; gap:8px;
+  box-shadow:0 -4px 20px #00ff8822;
+}
+.player.on{display:flex;}
+.ptop{display:flex;align-items:center;gap:12px;}
+.pthumb{
+  width:44px;height:44px; background:var(--card); border:1px solid var(--border2);
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  font-size:22px; overflow:hidden; position:relative;
+}
+.pthumb img{width:100%;height:100%;object-fit:cover;}
+.pthumb::after{content:'';position:absolute;inset:0;border:1px solid var(--accent);opacity:0.3;}
+.pinfo{flex:1;min-width:0;}
+.ptitle{font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:var(--glow);}
+.partist{font-size:11px;color:var(--muted);}
+.pstatus{font-family:'Orbitron',monospace;font-size:9px;color:var(--accent2);letter-spacing:1px;margin-top:2px;text-shadow:var(--glow2);}
+.pctrls{display:flex;align-items:center;gap:8px;}
+.pc{
+  background:none; border:1px solid var(--border2); color:var(--text2);
+  font-size:12px; width:30px; height:30px; cursor:pointer;
+  display:flex; align-items:center; justify-content:center; transition:all 0.15s;
+}
+.pc:hover{border-color:var(--accent);color:var(--accent);}
+.pc.main{
+  width:38px; height:38px; border:2px solid var(--accent);
+  color:var(--accent); font-size:14px;
+  text-shadow:var(--glow); box-shadow:var(--glow);
+}
+.pc.main:hover{background:var(--accent);color:var(--bg);text-shadow:none;box-shadow:none;}
+.pprog{flex:1;}
+.pbar{height:4px;background:var(--border);cursor:pointer;position:relative;margin-bottom:3px;}
+.pfill{
+  height:100%; background:var(--accent); box-shadow:var(--glow);
+  width:0%; transition:width 0.1s linear; position:relative;
+}
+.pfill::after{
+  content:''; position:absolute; right:-3px; top:-2px;
+  width:8px; height:8px; background:var(--accent);
+  border-radius:50%; box-shadow:var(--glow);
+}
+.trow{display:flex;justify-content:space-between;font-size:9px;color:var(--muted);font-family:'Orbitron',monospace;}
+.vwrap{display:flex;align-items:center;gap:6px;}
+.vi{font-size:12px;color:var(--muted);}
+input[type=range].vol{
+  -webkit-appearance:none; width:70px; height:3px;
+  background:var(--border2); outline:none; cursor:pointer;
+}
+input[type=range].vol::-webkit-slider-thumb{
+  -webkit-appearance:none; width:10px; height:10px;
+  background:var(--accent); box-shadow:var(--glow);
+}
 
-  /* Search box */
-  .search-wrap { position: relative; }
-  .search-input {
-    width: 100%; background: var(--card); border: 1px solid var(--border);
-    border-radius: 8px; padding: 9px 36px 9px 12px;
-    font-family: var(--sans); font-size: 13px; color: var(--text);
-    outline: none; transition: border-color 0.2s;
-  }
-  .search-input:focus { border-color: var(--accent); }
-  .search-input::placeholder { color: var(--muted); }
-  .search-btn {
-    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
-    background: var(--accent); border: none; border-radius: 5px;
-    width: 22px; height: 22px; cursor: pointer; color: #000;
-    font-size: 11px; display: flex; align-items: center; justify-content: center;
-  }
-
-  /* Endpoint nav */
-  .endpoint-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 9px 10px; border-radius: 8px; cursor: pointer;
-    transition: background 0.15s; margin-bottom: 2px;
-  }
-  .endpoint-item:hover { background: var(--card); }
-  .endpoint-item.active { background: #00d4ff10; border: 1px solid #00d4ff20; }
-  .method-badge {
-    padding: 2px 7px; border-radius: 4px; font-size: 10px;
-    font-weight: 700; font-family: var(--mono); flex-shrink: 0;
-  }
-  .get  { background: #1f6feb20; color: #58a6ff; }
-  .post { background: #f8514920; color: #f85149; }
-  .endpoint-path { font-family: var(--mono); font-size: 12px; color: var(--text); }
-  .endpoint-desc { font-size: 11px; color: var(--muted); margin-top: 1px; }
-
-  /* Song ID input */
-  .sid-input {
-    width: 100%; background: var(--card); border: 1px solid var(--border);
-    border-radius: 8px; padding: 8px 12px;
-    font-family: var(--mono); font-size: 12px; color: var(--accent3);
-    outline: none; transition: border-color 0.2s; margin-bottom: 6px;
-  }
-  .sid-input:focus { border-color: var(--accent3); }
-
-  .country-select {
-    width: 100%; background: var(--card); border: 1px solid var(--border);
-    border-radius: 8px; padding: 8px 12px;
-    font-family: var(--sans); font-size: 13px; color: var(--text);
-    outline: none; cursor: pointer; margin-bottom: 6px;
-  }
-
-  .run-btn {
-    width: 100%; padding: 10px; border: none; border-radius: 8px;
-    background: linear-gradient(135deg, var(--accent), #0099bb);
-    color: #000; font-family: var(--sans); font-size: 13px; font-weight: 700;
-    cursor: pointer; transition: opacity 0.2s; display: flex;
-    align-items: center; justify-content: center; gap: 6px;
-  }
-  .run-btn:hover { opacity: 0.85; }
-  .run-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-  .run-btn .spinner {
-    width: 14px; height: 14px; border: 2px solid #00000040;
-    border-top-color: #000; border-radius: 50%; animation: spin 0.6s linear infinite;
-    display: none;
-  }
-  .run-btn.loading .spinner { display: block; }
-
-  /* Quick songs */
-  .quick-item {
-    display: flex; align-items: center; gap: 8px;
-    padding: 7px 8px; border-radius: 6px; cursor: pointer;
-    transition: background 0.15s; margin-bottom: 2px;
-  }
-  .quick-item:hover { background: var(--card); }
-  .quick-cover {
-    width: 32px; height: 32px; border-radius: 4px;
-    background: linear-gradient(135deg, #1e2d3d, #0d1117);
-    flex-shrink: 0; overflow: hidden; display: flex;
-    align-items: center; justify-content: center; font-size: 16px;
-  }
-  .quick-cover img { width: 100%; height: 100%; object-fit: cover; }
-  .quick-title { font-size: 12px; color: var(--text); font-weight: 600; }
-  .quick-artist { font-size: 11px; color: var(--muted); }
-
-  /* ── MAIN PANEL ── */
-  .main {
-    display: grid;
-    grid-template-rows: 1fr auto;
-    overflow: hidden;
-    position: relative;
-  }
-
-  .response-area {
-    overflow-y: auto; padding: 20px;
-    scrollbar-width: thin;
-    scrollbar-color: var(--border) transparent;
-  }
-
-  .response-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 12px;
-  }
-  .response-title {
-    display: flex; align-items: center; gap: 8px;
-    font-size: 13px; font-weight: 700; color: var(--muted);
-    text-transform: uppercase; letter-spacing: 1px;
-  }
-  .response-title::before {
-    content: '>_'; color: var(--accent); font-family: var(--mono);
-  }
-
-  .status-pill {
-    padding: 3px 10px; border-radius: 12px; font-size: 11px;
-    font-weight: 700; font-family: var(--mono);
-  }
-  .status-ok  { background: #3fb95020; color: var(--success); }
-  .status-err { background: #f8514920; color: var(--error); }
-  .status-load { background: #d2992220; color: var(--warning); }
-
-  .response-meta {
-    display: flex; gap: 16px; margin-bottom: 12px;
-  }
-  .meta-item {
-    font-size: 11px; color: var(--muted); font-family: var(--mono);
-  }
-  .meta-item span { color: var(--text); }
-
-  .json-block {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; overflow: hidden;
-  }
-  .json-block-header {
-    background: #ffffff04; padding: 8px 14px;
-    display: flex; align-items: center; justify-content: space-between;
-    border-bottom: 1px solid var(--border);
-  }
-  .json-block-header span { font-size: 11px; color: var(--muted); font-family: var(--mono); }
-  .copy-btn {
-    background: none; border: 1px solid var(--border); border-radius: 5px;
-    color: var(--muted); font-size: 11px; padding: 3px 8px; cursor: pointer;
-    font-family: var(--sans); transition: all 0.2s;
-  }
-  .copy-btn:hover { color: var(--text); border-color: var(--accent); }
-
-  .json-content {
-    padding: 16px; font-family: var(--mono); font-size: 12.5px;
-    line-height: 1.7; overflow-x: auto; white-space: pre;
-  }
-
-  /* JSON syntax highlight */
-  .jk { color: #79c0ff; }   /* key */
-  .js { color: #a5d6ff; }   /* string value */
-  .jn { color: #ff9e64; }   /* number */
-  .jb { color: #ff7b72; }   /* boolean/null */
-  .jp { color: #8b949e; }   /* punctuation */
-
-  /* Empty state */
-  .empty-state {
-    display: flex; flex-direction: column; align-items: center;
-    justify-content: center; height: 100%; gap: 12px; color: var(--muted);
-  }
-  .empty-icon { font-size: 48px; opacity: 0.3; }
-  .empty-text { font-size: 14px; }
-  .empty-sub  { font-size: 12px; opacity: 0.7; }
-
-  /* ── AUDIO PLAYER ── */
-  .player-bar {
-    background: var(--surface);
-    border-top: 1px solid var(--border);
-    padding: 12px 20px;
-    display: none;
-    align-items: center;
-    gap: 16px;
-  }
-  .player-bar.visible { display: flex; }
-
-  .player-cover {
-    width: 40px; height: 40px; border-radius: 6px; flex-shrink: 0;
-    background: var(--card); overflow: hidden;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-  }
-  .player-cover img { width: 100%; height: 100%; object-fit: cover; }
-
-  .player-info { flex: 1; min-width: 0; }
-  .player-title { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .player-artist { font-size: 11px; color: var(--muted); }
-
-  .player-controls { display: flex; align-items: center; gap: 12px; }
-  .ctrl-btn {
-    background: none; border: none; color: var(--muted);
-    font-size: 18px; cursor: pointer; transition: color 0.2s;
-    width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
-    border-radius: 50%;
-  }
-  .ctrl-btn:hover { color: var(--text); }
-  .ctrl-btn.play {
-    background: var(--accent); color: #000; font-size: 14px;
-    width: 36px; height: 36px;
-  }
-  .ctrl-btn.play:hover { opacity: 0.85; }
-
-  .player-progress { flex: 1; max-width: 200px; }
-  .progress-track {
-    height: 3px; background: var(--border); border-radius: 2px;
-    cursor: pointer; position: relative; overflow: hidden;
-  }
-  .progress-fill {
-    height: 100%; background: var(--accent); border-radius: 2px;
-    width: 0%; transition: width 0.1s linear;
-  }
-  .player-time {
-    display: flex; justify-content: space-between;
-    font-size: 10px; color: var(--muted); font-family: var(--mono);
-    margin-top: 3px;
-  }
-
-  .player-vol { display: flex; align-items: center; gap: 6px; }
-  .vol-icon { font-size: 14px; color: var(--muted); }
-  .vol-slider {
-    -webkit-appearance: none; width: 70px; height: 3px;
-    background: var(--border); border-radius: 2px; outline: none; cursor: pointer;
-  }
-  .vol-slider::-webkit-slider-thumb {
-    -webkit-appearance: none; width: 12px; height: 12px;
-    background: var(--accent); border-radius: 50%;
-  }
-
-  /* Animations */
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:none; } }
-  .fade-in { animation: fadeIn 0.3s ease; }
-
-  .live-dot {
-    width: 6px; height: 6px; border-radius: 50%;
-    background: var(--success); animation: pulse 2s infinite;
-    display: inline-block;
-  }
-  @keyframes pulse {
-    0%,100% { opacity:1; } 50% { opacity:0.3; }
-  }
+/* Toast */
+.toast{
+  position:fixed; bottom:80px; right:16px;
+  background:var(--card); border:1px solid var(--accent);
+  color:var(--accent); font-size:12px; padding:8px 16px;
+  z-index:9997; text-shadow:var(--glow); box-shadow:var(--glow);
+  animation:tin 0.3s ease;
+}
+@keyframes tin{from{transform:translateX(100%);opacity:0}to{transform:none;opacity:1}}
 </style>
 </head>
 <body>
 
 <!-- TOPBAR -->
 <div class="topbar">
-  <div class="logo">
-    <div class="logo-icon">🎵</div>
-    Light<span>Music</span>
-  </div>
-  <div class="topbar-url">
-    <span>API URL</span>
-    <div class="url-text" id="currentUrl">Pilih endpoint untuk mulai</div>
-  </div>
-  <span class="topbar-badge"><span class="live-dot"></span> LIVE</span>
+  <div class="logo"><span class="lb">[</span>LIGHTMUSIC<span class="lb">]</span></div>
+  <div class="url-bar" id="urlBar">ready...</div>
+  <div class="dot"></div>
+  <button class="theme-btn" id="themBtn" onclick="toggleTheme()">[ DARK ]</button>
 </div>
 
 <!-- SIDEBAR -->
 <div class="sidebar">
 
-  <!-- Search -->
-  <div class="sidebar-section">
-    <div class="sidebar-label">🔍 Pencarian</div>
-    <div class="search-wrap">
-      <input class="search-input" id="searchQuery" type="text" placeholder="Cari lagu, artis..." />
-      <button class="search-btn" onclick="runSearch()">▶</button>
+  <div class="sb">
+    <div class="sbt">SEARCH</div>
+    <input class="ri" id="searchQ" type="text" placeholder="ketik lagu / artis..."/>
+    <button class="rbtn" onclick="doSearch()">▶ SEARCH</button>
+  </div>
+
+  <div class="sb">
+    <div class="sbt">ENDPOINTS</div>
+    <div class="ep active" data-ep="search" onclick="selEp(this,'search')">
+      <span class="em get">GET</span>
+      <div><div class="ep-path">/search</div><div class="ep-desc">Cari lagu & artis</div></div>
+    </div>
+    <div class="ep" data-ep="song" onclick="selEp(this,'song')">
+      <span class="em get">GET</span>
+      <div><div class="ep-path">/song/:id</div><div class="ep-desc">Detail metadata</div></div>
+    </div>
+    <div class="ep" data-ep="stream" onclick="selEp(this,'stream')">
+      <span class="em get">GET</span>
+      <div><div class="ep-path">/stream/:id</div><div class="ep-desc">URL stream audio</div></div>
+    </div>
+    <div class="ep" data-ep="lyrics" onclick="selEp(this,'lyrics')">
+      <span class="em get">GET</span>
+      <div><div class="ep-path">/lyrics/:id</div><div class="ep-desc">Lirik lagu</div></div>
+    </div>
+    <div class="ep" data-ep="charts" onclick="selEp(this,'charts')">
+      <span class="em get">GET</span>
+      <div><div class="ep-path">/charts</div><div class="ep-desc">Top chart</div></div>
     </div>
   </div>
 
-  <!-- Endpoints -->
-  <div class="sidebar-section">
-    <div class="sidebar-label">📡 Endpoints</div>
-    <div class="endpoint-item" onclick="selectEndpoint('search')">
-      <span class="method-badge get">GET</span>
-      <div>
-        <div class="endpoint-path">/search</div>
-        <div class="endpoint-desc">Cari lagu & artis</div>
-      </div>
-    </div>
-    <div class="endpoint-item" onclick="selectEndpoint('song')">
-      <span class="method-badge get">GET</span>
-      <div>
-        <div class="endpoint-path">/song/:id</div>
-        <div class="endpoint-desc">Detail metadata lagu</div>
-      </div>
-    </div>
-    <div class="endpoint-item" onclick="selectEndpoint('stream')">
-      <span class="method-badge get">GET</span>
-      <div>
-        <div class="endpoint-path">/stream/:id</div>
-        <div class="endpoint-desc">Ambil URL stream audio</div>
-      </div>
-    </div>
-    <div class="endpoint-item" onclick="selectEndpoint('play')">
-      <span class="method-badge get">GET</span>
-      <div>
-        <div class="endpoint-path">/play/:id</div>
-        <div class="endpoint-desc">Play audio langsung</div>
-      </div>
-    </div>
-    <div class="endpoint-item" onclick="selectEndpoint('lyrics')">
-      <span class="method-badge get">GET</span>
-      <div>
-        <div class="endpoint-path">/lyrics/:id</div>
-        <div class="endpoint-desc">Lirik lagu</div>
-      </div>
-    </div>
-    <div class="endpoint-item" onclick="selectEndpoint('charts')">
-      <span class="method-badge get">GET</span>
-      <div>
-        <div class="endpoint-path">/charts</div>
-        <div class="endpoint-desc">Top chart per negara</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Song ID -->
-  <div class="sidebar-section">
-    <div class="sidebar-label">🎵 Song / Video ID</div>
-    <input class="sid-input" id="videoId" type="text" placeholder="contoh: kitkOTxGfjI" value="kitkOTxGfjI" />
-    <button class="run-btn" id="runBtn" onclick="runEndpoint()">
-      <span class="spinner" id="spinner"></span>
-      <span id="runLabel">▶ Jalankan</span>
-    </button>
-  </div>
-
-  <!-- Country -->
-  <div class="sidebar-section">
-    <div class="sidebar-label">🌏 Chart Country</div>
-    <select class="country-select" id="countrySelect">
+  <div class="sb">
+    <div class="sbt">PARAMS</div>
+    <input class="ri" id="vidId" type="text" placeholder="video id..." value="kitkOTxGfjI"/>
+    <select class="rs" id="ctry">
       <option value="ID">🇮🇩 Indonesia</option>
       <option value="US">🇺🇸 United States</option>
       <option value="JP">🇯🇵 Japan</option>
       <option value="KR">🇰🇷 South Korea</option>
       <option value="GB">🇬🇧 United Kingdom</option>
-      <option value="AU">🇦🇺 Australia</option>
     </select>
+    <button class="rbtn" id="runBtn" onclick="runEp()">▶ EXECUTE</button>
   </div>
 
-  <!-- Quick Songs -->
-  <div class="sidebar-section">
-    <div class="sidebar-label">⚡ Quick Test</div>
-    <div class="quick-item" onclick="quickPlay('kitkOTxGfjI','Separuh Nafas','Dewa 19')">
-      <div class="quick-cover">🎵</div>
-      <div>
-        <div class="quick-title">Separuh Nafas</div>
-        <div class="quick-artist">Dewa 19</div>
-      </div>
+  <div class="sb">
+    <div class="sbt">QUICK PLAY</div>
+    <div class="qs" id="qs0" onclick="quickPlay('kitkOTxGfjI','Separuh Nafas','Dewa 19')">
+      <div class="qn">01</div>
+      <div><div class="qt">Separuh Nafas</div><div class="qa">Dewa 19</div></div>
     </div>
-    <div class="quick-item" onclick="quickPlay('kXQRVbRfF4s','Yellow','Coldplay')">
-      <div class="quick-cover">🌟</div>
-      <div>
-        <div class="quick-title">Yellow</div>
-        <div class="quick-artist">Coldplay</div>
-      </div>
+    <div class="qs" id="qs1" onclick="quickPlay('kXQRVbRfF4s','Yellow','Coldplay')">
+      <div class="qn">02</div>
+      <div><div class="qt">Yellow</div><div class="qa">Coldplay</div></div>
     </div>
-    <div class="quick-item" onclick="quickPlay('5a0EkeqWNBs','Kangen','Dewa 19')">
-      <div class="quick-cover">💫</div>
-      <div>
-        <div class="quick-title">Kangen</div>
-        <div class="quick-artist">Dewa 19</div>
-      </div>
+    <div class="qs" id="qs2" onclick="quickPlay('5a0EkeqWNBs','Kangen','Dewa 19')">
+      <div class="qn">03</div>
+      <div><div class="qt">Kangen</div><div class="qa">Dewa 19</div></div>
     </div>
   </div>
 
@@ -473,363 +340,291 @@
 
 <!-- MAIN -->
 <div class="main">
-
-  <div class="response-area" id="responseArea">
-    <div class="empty-state" id="emptyState">
-      <div class="empty-icon">🎵</div>
-      <div class="empty-text">LightMusic API Explorer</div>
-      <div class="empty-sub">Pilih endpoint di sidebar atau ketik pencarian untuk mulai</div>
+  <div class="resp" id="respArea">
+    <div class="empty">
+      <div class="big-sym">♫</div>
+      <div class="big-sub">LIGHTMUSIC API</div>
+      <div class="big-hint">// SELECT ENDPOINT OR SEARCH TO BEGIN</div>
     </div>
   </div>
 
-  <!-- Audio Player -->
-  <div class="player-bar" id="playerBar">
-    <div class="player-cover" id="playerCover">🎵</div>
-    <div class="player-info">
-      <div class="player-title" id="playerTitle">—</div>
-      <div class="player-artist" id="playerArtist">—</div>
-    </div>
-    <div class="player-controls">
-      <button class="ctrl-btn" onclick="seekBack()">⏮</button>
-      <button class="ctrl-btn play" id="playBtn" onclick="togglePlay()">▶</button>
-      <button class="ctrl-btn" onclick="seekForward()">⏭</button>
-    </div>
-    <div class="player-progress">
-      <div class="progress-track" onclick="seekTo(event)">
-        <div class="progress-fill" id="progressFill"></div>
+  <div class="player" id="player">
+    <div class="ptop">
+      <div class="pthumb" id="pThumb">♪</div>
+      <div class="pinfo">
+        <div class="ptitle" id="pTitle">—</div>
+        <div class="partist" id="pArtist">—</div>
+        <div class="pstatus" id="pStatus">STOPPED</div>
       </div>
-      <div class="player-time">
-        <span id="timeNow">0:00</span>
-        <span id="timeDur">0:00</span>
+      <div class="pctrls">
+        <button class="pc" onclick="skip(-10)">⏮</button>
+        <button class="pc main" id="playBtn" onclick="togglePlay()">▶</button>
+        <button class="pc" onclick="skip(10)">⏭</button>
       </div>
-    </div>
-    <div class="player-vol">
-      <span class="vol-icon">🔊</span>
-      <input class="vol-slider" type="range" min="0" max="1" step="0.05" value="0.8" oninput="setVol(this.value)">
+      <div class="pprog">
+        <div class="pbar" onclick="seekTo(event)">
+          <div class="pfill" id="pFill"></div>
+        </div>
+        <div class="trow">
+          <span id="tNow">0:00</span>
+          <span id="tDur">0:00</span>
+        </div>
+      </div>
+      <div class="vwrap">
+        <span class="vi">▶▶</span>
+        <input type="range" class="vol" min="0" max="1" step="0.05" value="0.8" oninput="audio.volume=this.value">
+      </div>
     </div>
   </div>
-
 </div>
 
-<audio id="audioEl"></audio>
+<audio id="audioEl" preload="none"></audio>
 
 <script>
-  // ── CONFIG ──────────────────────────────────────────────────
-  const BASE = window.location.hostname === 'localhost' 
-    ? 'http://localhost:5000'
-    : 'https://lightmusic.up.railway.app';
-  // Ganti dengan URL Railway kamu di atas ↑
+const BASE = (location.hostname==='localhost'||location.hostname==='127.0.0.1')
+  ? 'http://localhost:5000'
+  : 'https://lightmusic.up.railway.app';
 
-  let currentEndpoint = 'search';
-  const audio = document.getElementById('audioEl');
-  audio.volume = 0.8;
+const audio = document.getElementById('audioEl');
+audio.volume = 0.8;
+let curEp = 'search', playingId = '', busy = false;
 
-  // ── ENDPOINT SELECT ─────────────────────────────────────────
-  function selectEndpoint(ep) {
-    currentEndpoint = ep;
-    document.querySelectorAll('.endpoint-item').forEach(el => el.classList.remove('active'));
-    event.currentTarget.classList.add('active');
+// Theme
+let theme = 'dark';
+function toggleTheme() {
+  theme = theme==='dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+  document.getElementById('themBtn').textContent = `[ ${theme.toUpperCase()} ]`;
+}
+
+// Endpoint
+function selEp(el, ep) {
+  document.querySelectorAll('.ep').forEach(e=>e.classList.remove('active'));
+  el.classList.add('active');
+  curEp = ep;
+}
+
+// Run
+async function runEp() {
+  const vid = document.getElementById('vidId').value.trim();
+  const q   = document.getElementById('searchQ').value.trim();
+  const ctr = document.getElementById('ctry').value;
+  let url   = BASE;
+  switch(curEp) {
+    case 'search':  url=`${BASE}/search?q=${encodeURIComponent(q||'dewa 19')}&type=songs`; break;
+    case 'song':    url=`${BASE}/song/${vid}`; break;
+    case 'stream':  url=`${BASE}/stream/${vid}`; break;
+    case 'lyrics':  url=`${BASE}/lyrics/${vid}`; break;
+    case 'charts':  url=`${BASE}/charts?country=${ctr}`; break;
   }
+  const data = await hit(url);
+  if (!data) return;
+  renderJson(data, url);
+  if (curEp==='search' && Array.isArray(data.data)) renderCards(data.data);
+}
 
-  // ── RUN ENDPOINT ────────────────────────────────────────────
-  async function runEndpoint() {
-    const vid = document.getElementById('videoId').value.trim();
-    const country = document.getElementById('countrySelect').value;
-    const q = document.getElementById('searchQuery').value.trim();
-    
+async function doSearch() {
+  const q = document.getElementById('searchQ').value.trim();
+  if (!q) return;
+  const url = `${BASE}/search?q=${encodeURIComponent(q)}&type=songs`;
+  const data = await hit(url);
+  if (!data) return;
+  renderJson(data, url);
+  if (Array.isArray(data.data)) renderCards(data.data);
+}
 
-    let url = '';
-    switch(currentEndpoint) {
-      case 'search':  url = `${BASE}/search?q=${encodeURIComponent(q||'dewa19')}&type=songs`; break;
-      case 'song':    url = `${BASE}/song/${vid}`; break;
-      case 'stream':  url = `${BASE}/stream/${vid}`; break;
-      case 'play':
-            fetchStreamThenPlay(vid, 'Preview', '');
-            fetchAndShow(`${BASE}/stream/${vid}`);
-            return;
-      case 'lyrics':  url = `${BASE}/lyrics/${vid}`; break;
-      case 'charts':  url = `${BASE}/charts?country=${country}`; break;
-      default: url = BASE;
+// Fetch
+async function hit(url) {
+  if (busy) return null;
+  busy = true;
+  setBusy(true);
+  document.getElementById('urlBar').textContent = url.replace(BASE,'');
+  const t = Date.now();
+  try {
+    const r = await fetch(url);
+    const d = await r.json();
+    d._m = { code: r.status, ms: Date.now()-t };
+    return d;
+  } catch(e) {
+    toast('Fetch error: '+e.message);
+    return null;
+  } finally {
+    busy = false;
+    setBusy(false);
+  }
+}
+
+// Render JSON
+function renderJson(data, url) {
+  const m = data._m||{};
+  const c = {...data}; delete c._m;
+  const ok = m.code>=200 && m.code<300 && data.status==='success';
+  document.getElementById('respArea').innerHTML = `
+    <div>
+      <div class="meta-row">
+        <span class="rlabel">// OUTPUT</span>
+        <span class="stag ${ok?'sok':'serr'}">${ok?`✓ ${m.code} OK`:`✗ ${m.code||'ERR'}`}</span>
+        <span class="mpill">${m.ms}ms</span>
+        <span class="mpill">${JSON.stringify(c).length}<span> B</span></span>
+        <button class="cbtn" onclick="copyJ()">[ COPY ]</button>
+      </div>
+      <div class="jw" id="jOut">${hl(JSON.stringify(c,null,2))}</div>
+    </div>`;
+  window._lj = c;
+}
+
+// Cards
+function renderCards(items) {
+  const wrap = document.createElement('div');
+  wrap.className = 'cards';
+  items.slice(0,12).forEach(it => {
+    const d = document.createElement('div');
+    d.className = 'scard';
+    d.innerHTML = it.thumbnail
+      ? `<img src="${it.thumbnail}" onerror="this.style.display='none'">`
+      : `<div class="scard-placeholder">♫</div>`;
+    d.innerHTML += `
+      <div class="scard-title">${esc(it.title)}</div>
+      <div class="scard-artist">${esc(it.artist||'')}</div>
+      <div class="scard-btns">
+        <button class="sbtn pb" onclick="quickPlay('${it.id}','${esc(it.title)}','${esc(it.artist||'')}')">▶ PLAY</button>
+        <button class="sbtn ib" onclick="infoOf('${it.id}')">ℹ INFO</button>
+      </div>`;
+    wrap.appendChild(d);
+  });
+  document.getElementById('respArea').appendChild(wrap);
+}
+
+// Play
+async function quickPlay(id, title, artist) {
+  if (playingId===id && !audio.paused) { audio.pause(); return; }
+
+  document.querySelectorAll('.qs').forEach(e=>e.classList.remove('playing'));
+  const quick = document.querySelector(`.qs[id*="${id}"]`);
+  if (quick) quick.classList.add('playing');
+
+  document.getElementById('pTitle').textContent  = title;
+  document.getElementById('pArtist').textContent = artist;
+  document.getElementById('pStatus').textContent = 'LOADING...';
+  document.getElementById('player').classList.add('on');
+  document.getElementById('playBtn').textContent = '...';
+  document.getElementById('playBtn').disabled = true;
+
+  try {
+    const r = await fetch(`${BASE}/stream/${id}`);
+    const d = await r.json();
+
+    if (d.status!=='success' || !d.data?.stream_url) {
+      throw new Error(d.message||'Stream URL kosong');
     }
 
-    await fetchAndShow(url);
-  }
-
-  async function runSearch() {
-    currentEndpoint = 'search';
-    const q = document.getElementById('searchQuery').value.trim();
-    if (!q) return;
-    await fetchAndShow(`${BASE}/search?q=${encodeURIComponent(q)}&type=songs`);
-  }
-
-  async function fetchAndShow(url) {
-    setLoading(true);
-    document.getElementById('currentUrl').textContent = url;
-    const start = Date.now();
-
-    try {
-      const res = await fetch(url);
-      const elapsed = Date.now() - start;
-      const data = await res.json();
-      renderResponse(data, res.status, elapsed, url);
-
-      // Auto-play jika ada stream_url
-      if (data.data?.stream_url && data.data?.title) {
-        setupPlayer(data.data.stream_url, data.data.title, '', data.data.thumbnail || '');
-      }
-
-      // Tampilkan hasil search sebagai quick items
-      if (data.data && Array.isArray(data.data)) {
-        renderSearchResults(data.data);
-      }
-
-    } catch(e) {
-      renderError(e.message);
-    } finally {
-      setLoading(false);
+    // Update thumb
+    if (d.data.thumbnail) {
+      document.getElementById('pThumb').innerHTML =
+        `<img src="${d.data.thumbnail}" onerror="this.parentElement.textContent='♪'">`;
     }
-  }
 
-  // ── RENDER RESPONSE ─────────────────────────────────────────
-  function renderResponse(data, status, ms, url) {
-    const area = document.getElementById('responseArea');
-    const isOk = status >= 200 && status < 300;
-    const statusClass = isOk ? 'status-ok' : 'status-err';
-    const statusLabel = isOk ? `✓ ${status} OK` : `✗ ${status} ERROR`;
+    playingId = id;
 
-    area.innerHTML = `
-      <div class="fade-in">
-        <div class="response-header">
-          <div class="response-title">JSON Response</div>
-          <span class="status-pill ${statusClass}">${statusLabel}</span>
-        </div>
-        <div class="response-meta">
-          <div class="meta-item">Waktu: <span>${ms}ms</span></div>
-          <div class="meta-item">Size: <span>${JSON.stringify(data).length} bytes</span></div>
-          <div class="meta-item">Endpoint: <span>${url.replace(BASE,'')}</span></div>
-        </div>
-        <div class="json-block">
-          <div class="json-block-header">
-            <span>application/json</span>
-            <button class="copy-btn" onclick="copyJson()">Copy</button>
-          </div>
-          <div class="json-content" id="jsonContent">${syntaxHighlight(JSON.stringify(data, null, 2))}</div>
-        </div>
-      </div>`;
+    // Reset audio sepenuhnya
+    audio.pause();
+    audio.src = '';
+    audio.load();
 
-    window._lastJson = data;
-  }
+    await new Promise(r => setTimeout(r, 150));
 
-  function renderError(msg) {
-    document.getElementById('responseArea').innerHTML = `
-      <div class="fade-in">
-        <div class="response-header">
-          <div class="response-title">JSON Response</div>
-          <span class="status-pill status-err">✗ ERROR</span>
-        </div>
-        <div class="json-block">
-          <div class="json-block-header"><span>error</span></div>
-          <div class="json-content" style="color:var(--error)">${msg}</div>
-        </div>
-      </div>`;
-  }
+    audio.src = d.data.stream_url;
 
-  function renderSearchResults(items) {
-    // Update quick items di sidebar dengan hasil search
-    const container = document.querySelector('.sidebar-section:last-child');
-    if (!items.length) return;
-
-    let html = '<div class="sidebar-label">🔎 Hasil Pencarian</div>';
-    items.slice(0, 6).forEach(item => {
-      html += `
-        <div class="quick-item" onclick="quickPlay('${item.id}','${escHtml(item.title)}','${escHtml(item.artist)}')">
-          <div class="quick-cover">
-            ${item.thumbnail ? `<img src="${item.thumbnail}" onerror="this.style.display='none'">` : '🎵'}
-          </div>
-          <div>
-            <div class="quick-title">${escHtml(item.title)}</div>
-            <div class="quick-artist">${escHtml(item.artist)}</div>
-          </div>
-        </div>`;
+    await new Promise((resolve, reject) => {
+      const onCanPlay = () => { cleanup(); resolve(); };
+      const onError   = () => { cleanup(); reject(new Error('Format tidak didukung')); };
+      const cleanup   = () => { audio.removeEventListener('canplay', onCanPlay); audio.removeEventListener('error', onError); };
+      audio.addEventListener('canplay', onCanPlay);
+      audio.addEventListener('error', onError);
+      audio.load();
     });
-    container.innerHTML = html;
-  }
 
-  // ── SYNTAX HIGHLIGHT ─────────────────────────────────────────
-  function syntaxHighlight(json) {
-    return json
-      .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-      .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
-        if (/^"/.test(match)) {
-          return /:$/.test(match)
-            ? `<span class="jk">${match}</span>`
-            : `<span class="js">${match}</span>`;
-        }
-        if (/true|false|null/.test(match)) return `<span class="jb">${match}</span>`;
-        return `<span class="jn">${match}</span>`;
-      });
-  }
+    await audio.play();
+    document.getElementById('pStatus').textContent = 'NOW PLAYING';
+    document.getElementById('playBtn').textContent = '⏸';
 
-  function copyJson() {
-    navigator.clipboard.writeText(JSON.stringify(window._lastJson, null, 2));
-    document.querySelector('.copy-btn').textContent = '✓ Copied!';
-    setTimeout(() => document.querySelector('.copy-btn').textContent = 'Copy', 2000);
-  }
-
-
- // ── AUDIO PLAYER ─────────────────────────────────────────────
-
-  function quickPlay(id, title, artist) {
-      document.getElementById('videoId').value = id;
-      // Fetch stream dulu, baru play
-      fetchStreamThenPlay(id, title, artist);
-  }
-
-  async function fetchStreamThenPlay(id, title, artist) {
-      setLoading(true);
-      try {
-          const res = await fetch(`${BASE}/stream/${id}`);
-          const data = await res.json();
-          
-          if (data.status === 'success' && data.data?.stream_url) {
-              setupPlayer(
-                  data.data.stream_url,
-                  data.data.title || title,
-                  data.data.author || artist,
-                  data.data.thumbnail || ''
-              );
-          } else {
-              alert('Gagal dapat stream URL: ' + (data.message || 'unknown error'));
-          }
-      } catch(e) {
-          console.error(e);
-          alert('Error: ' + e.message);
-      } finally {
-          setLoading(false);
-      }
-  }
-
-  function playAudio(id, title, artist, thumb) {
-      document.getElementById('currentUrl').textContent = `${BASE}/stream/${id}`;
-      fetchStreamThenPlay(id, title, artist);
-      // Juga tampilkan JSON response
-      fetchAndShow(`${BASE}/stream/${id}`);
-  }
-
-  function setupPlayer(src, title, artist, thumb) {
-      // Stop dulu sebelum load baru
-      audio.pause();
-      audio.removeAttribute('src');
-      audio.load();
-
-      // Set source baru
-      audio.src = src;
-      audio.load();
-
-      // Play setelah user interaction (tidak autoplay)
-      audio.addEventListener('canplay', function onCanPlay() {
-          audio.removeEventListener('canplay', onCanPlay);
-          audio.play()
-              .then(() => {
-                  document.getElementById('playBtn').textContent = '⏸';
-              })
-              .catch(e => {
-                  // Autoplay diblokir browser — user perlu klik play manual
-                  console.log('Klik tombol play untuk mulai:', e.message);
-                  document.getElementById('playBtn').textContent = '▶';
-                  showPlayHint();
-              });
-      });
-
-      document.getElementById('playerTitle').textContent = title;
-      document.getElementById('playerArtist').textContent = artist || 'YouTube Music';
-      document.getElementById('playerBar').classList.add('visible');
-
-      if (thumb) {
-          document.getElementById('playerCover').innerHTML = 
-              `<img src="${thumb}" onerror="this.parentElement.textContent='🎵'">`;
-      }
-  }
-
-  function showPlayHint() {
-      const bar = document.getElementById('playerBar');
-      // Tambah hint kecil
-      let hint = document.getElementById('playHint');
-      if (!hint) {
-          hint = document.createElement('div');
-          hint.id = 'playHint';
-          hint.style.cssText = `
-              position:absolute; bottom:70px; left:50%; transform:translateX(-50%);
-              background:#00d4ff20; border:1px solid #00d4ff40; border-radius:8px;
-              padding:8px 16px; font-size:12px; color:#00d4ff;
-              animation: fadeIn 0.3s ease;
-          `;
-          hint.textContent = '▶ Klik tombol play untuk mulai';
-          document.querySelector('.main').appendChild(hint);
-          setTimeout(() => hint?.remove(), 3000);
-      }
-  }
-  
-  function togglePlay() {
-    if (audio.paused) {
-      audio.play();
-      document.getElementById('playBtn').textContent = '⏸';
-    } else {
-      audio.pause();
-      document.getElementById('playBtn').textContent = '▶';
-    }
-  }
-
-  function seekBack()    { audio.currentTime = Math.max(0, audio.currentTime - 10); }
-  function seekForward() { audio.currentTime = Math.min(audio.duration||0, audio.currentTime + 10); }
-  function setVol(v)     { audio.volume = v; }
-
-  function seekTo(e) {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = pct * (audio.duration || 0);
-  }
-
-  audio.addEventListener('timeupdate', () => {
-    if (!audio.duration) return;
-    const pct = (audio.currentTime / audio.duration) * 100;
-    document.getElementById('progressFill').style.width = pct + '%';
-    document.getElementById('timeNow').textContent = fmtTime(audio.currentTime);
-    document.getElementById('timeDur').textContent = fmtTime(audio.duration);
-  });
-
-  audio.addEventListener('ended', () => {
+  } catch(e) {
+    document.getElementById('pStatus').textContent = 'ERROR';
     document.getElementById('playBtn').textContent = '▶';
-    document.getElementById('progressFill').style.width = '0%';
-  });
-
-  function fmtTime(s) {
-    const m = Math.floor(s/60);
-    const sec = Math.floor(s%60).toString().padStart(2,'0');
-    return `${m}:${sec}`;
+    toast(e.message.includes('interact')||e.message.includes('play')
+      ? 'Klik ▶ untuk mulai putar'
+      : 'Error: '+e.message);
+  } finally {
+    document.getElementById('playBtn').disabled = false;
   }
+}
 
-  // ── UTILS ────────────────────────────────────────────────────
-  function setLoading(on) {
-    const btn = document.getElementById('runBtn');
-    const lbl = document.getElementById('runLabel');
-    const spn = document.getElementById('spinner');
-    btn.disabled = on;
-    lbl.textContent = on ? 'Loading...' : '▶ Jalankan';
-    spn.style.display = on ? 'block' : 'none';
+async function infoOf(id) {
+  document.getElementById('vidId').value = id;
+  const url = `${BASE}/song/${id}`;
+  const d = await hit(url);
+  if (d) renderJson(d, url);
+}
+
+function togglePlay() {
+  if (!audio.src || audio.src===location.href) { toast('Pilih lagu dulu!'); return; }
+  if (audio.paused) {
+    audio.play()
+      .then(()=>{ document.getElementById('playBtn').textContent='⏸'; document.getElementById('pStatus').textContent='NOW PLAYING'; })
+      .catch(e=>toast('Play: '+e.message));
+  } else {
+    audio.pause();
+    document.getElementById('playBtn').textContent='▶';
+    document.getElementById('pStatus').textContent='PAUSED';
   }
+}
 
-  function escHtml(s) {
-    return (s||'').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+function skip(s) { audio.currentTime = Math.max(0,Math.min(audio.duration||0, audio.currentTime+s)); }
+function seekTo(e) {
+  if (!audio.duration) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  audio.currentTime = ((e.clientX-r.left)/r.width)*audio.duration;
+}
 
-  // Enter key support
-  document.getElementById('searchQuery').addEventListener('keydown', e => {
-    if (e.key === 'Enter') runSearch();
-  });
-  document.getElementById('videoId').addEventListener('keydown', e => {
-    if (e.key === 'Enter') runEndpoint();
-  });
+audio.addEventListener('timeupdate', () => {
+  if (!audio.duration) return;
+  document.getElementById('pFill').style.width = (audio.currentTime/audio.duration*100)+'%';
+  document.getElementById('tNow').textContent = fmt(audio.currentTime);
+  document.getElementById('tDur').textContent = fmt(audio.duration);
+});
+audio.addEventListener('ended', () => {
+  document.getElementById('playBtn').textContent='▶';
+  document.getElementById('pStatus').textContent='STOPPED';
+  document.getElementById('pFill').style.width='0%';
+  document.querySelectorAll('.qs').forEach(e=>e.classList.remove('playing'));
+  playingId='';
+});
+audio.addEventListener('error', () => {
+  if (!audio.src || audio.src===location.href) return;
+  document.getElementById('pStatus').textContent='ERROR';
+  document.getElementById('playBtn').textContent='▶';
+  toast('Audio error — coba lagu lain');
+});
+
+// Utils
+function fmt(s){if(!s||isNaN(s))return'0:00';return`${Math.floor(s/60)}:${Math.floor(s%60).toString().padStart(2,'0')}`;}
+function esc(s){return(s||'').replace(/'/g,"&#39;").replace(/"/g,"&quot;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function hl(j){
+  return j.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,m=>{
+      if(/^"/.test(m)) return/:$/.test(m)?`<span class="jk">${m}</span>`:`<span class="js">${m}</span>`;
+      if(/true|false|null/.test(m)) return`<span class="jb">${m}</span>`;
+      return`<span class="jn">${m}</span>`;
+    });
+}
+function copyJ(){ if(!window._lj)return; navigator.clipboard.writeText(JSON.stringify(window._lj,null,2)).then(()=>toast('Copied!')); }
+function setBusy(on){ const b=document.getElementById('runBtn'); b.disabled=on; b.textContent=on?'// LOADING...':'▶ EXECUTE'; }
+function toast(msg){
+  const el=document.createElement('div'); el.className='toast'; el.textContent=msg;
+  document.body.appendChild(el); setTimeout(()=>el.remove(),3000);
+}
+document.getElementById('searchQ').addEventListener('keydown',e=>{if(e.key==='Enter')doSearch();});
+document.getElementById('vidId').addEventListener('keydown',e=>{if(e.key==='Enter')runEp();});
 </script>
 </body>
 </html>
