@@ -536,13 +536,17 @@
     const vid = document.getElementById('videoId').value.trim();
     const country = document.getElementById('countrySelect').value;
     const q = document.getElementById('searchQuery').value.trim();
+    
 
     let url = '';
     switch(currentEndpoint) {
       case 'search':  url = `${BASE}/search?q=${encodeURIComponent(q||'dewa19')}&type=songs`; break;
       case 'song':    url = `${BASE}/song/${vid}`; break;
       case 'stream':  url = `${BASE}/stream/${vid}`; break;
-      case 'play':    url = `${BASE}/play/${vid}`; playAudio(vid, 'Preview', ''); return;
+      case 'play':
+            fetchStreamThenPlay(vid, 'Preview', '');
+            fetchAndShow(`${BASE}/stream/${vid}`);
+            return;
       case 'lyrics':  url = `${BASE}/lyrics/${vid}`; break;
       case 'charts':  url = `${BASE}/charts?country=${country}`; break;
       default: url = BASE;
@@ -672,35 +676,100 @@
     setTimeout(() => document.querySelector('.copy-btn').textContent = 'Copy', 2000);
   }
 
-  // ── AUDIO PLAYER ─────────────────────────────────────────────
+
+ // ── AUDIO PLAYER ─────────────────────────────────────────────
+
   function quickPlay(id, title, artist) {
-    document.getElementById('videoId').value = id;
-    playAudio(id, title, artist, '');
+      document.getElementById('videoId').value = id;
+      // Fetch stream dulu, baru play
+      fetchStreamThenPlay(id, title, artist);
+  }
+
+  async function fetchStreamThenPlay(id, title, artist) {
+      setLoading(true);
+      try {
+          const res = await fetch(`${BASE}/stream/${id}`);
+          const data = await res.json();
+          
+          if (data.status === 'success' && data.data?.stream_url) {
+              setupPlayer(
+                  data.data.stream_url,
+                  data.data.title || title,
+                  data.data.author || artist,
+                  data.data.thumbnail || ''
+              );
+          } else {
+              alert('Gagal dapat stream URL: ' + (data.message || 'unknown error'));
+          }
+      } catch(e) {
+          console.error(e);
+          alert('Error: ' + e.message);
+      } finally {
+          setLoading(false);
+      }
   }
 
   function playAudio(id, title, artist, thumb) {
-    const playUrl = `${BASE}/play/${id}`;
-    document.getElementById('currentUrl').textContent = playUrl;
-
-    setupPlayer(playUrl, title, artist, thumb);
-
-    // Juga fetch stream info untuk tampilkan di response
-    fetchAndShow(`${BASE}/stream/${id}`);
+      document.getElementById('currentUrl').textContent = `${BASE}/stream/${id}`;
+      fetchStreamThenPlay(id, title, artist);
+      // Juga tampilkan JSON response
+      fetchAndShow(`${BASE}/stream/${id}`);
   }
 
   function setupPlayer(src, title, artist, thumb) {
-    audio.src = src;
-    audio.play().catch(e => console.log('Autoplay blocked:', e));
+      // Stop dulu sebelum load baru
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
 
-    document.getElementById('playerTitle').textContent = title;
-    document.getElementById('playerArtist').textContent = artist || 'YouTube Music';
-    if (thumb) {
-      document.getElementById('playerCover').innerHTML = `<img src="${thumb}">`;
-    }
-    document.getElementById('playerBar').classList.add('visible');
-    document.getElementById('playBtn').textContent = '⏸';
+      // Set source baru
+      audio.src = src;
+      audio.load();
+
+      // Play setelah user interaction (tidak autoplay)
+      audio.addEventListener('canplay', function onCanPlay() {
+          audio.removeEventListener('canplay', onCanPlay);
+          audio.play()
+              .then(() => {
+                  document.getElementById('playBtn').textContent = '⏸';
+              })
+              .catch(e => {
+                  // Autoplay diblokir browser — user perlu klik play manual
+                  console.log('Klik tombol play untuk mulai:', e.message);
+                  document.getElementById('playBtn').textContent = '▶';
+                  showPlayHint();
+              });
+      });
+
+      document.getElementById('playerTitle').textContent = title;
+      document.getElementById('playerArtist').textContent = artist || 'YouTube Music';
+      document.getElementById('playerBar').classList.add('visible');
+
+      if (thumb) {
+          document.getElementById('playerCover').innerHTML = 
+              `<img src="${thumb}" onerror="this.parentElement.textContent='🎵'">`;
+      }
   }
 
+  function showPlayHint() {
+      const bar = document.getElementById('playerBar');
+      // Tambah hint kecil
+      let hint = document.getElementById('playHint');
+      if (!hint) {
+          hint = document.createElement('div');
+          hint.id = 'playHint';
+          hint.style.cssText = `
+              position:absolute; bottom:70px; left:50%; transform:translateX(-50%);
+              background:#00d4ff20; border:1px solid #00d4ff40; border-radius:8px;
+              padding:8px 16px; font-size:12px; color:#00d4ff;
+              animation: fadeIn 0.3s ease;
+          `;
+          hint.textContent = '▶ Klik tombol play untuk mulai';
+          document.querySelector('.main').appendChild(hint);
+          setTimeout(() => hint?.remove(), 3000);
+      }
+  }
+  
   function togglePlay() {
     if (audio.paused) {
       audio.play();
