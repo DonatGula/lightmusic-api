@@ -107,3 +107,27 @@ def play_options(video_id):
         'Access-Control-Allow-Headers': 'Range, Content-Type',
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
     })
+
+@stream_bp.route('/download/<video_id>')
+def download(video_id):
+    """Return info untuk download — sama seperti /stream tapi dengan filename."""
+    try:
+        stream, yt = get_best_stream(video_id)
+        
+        # Bersihkan judul untuk nama file
+        import re
+        safe_title = re.sub(r'[^\w\s-]', '', yt.title).strip()
+        safe_title = re.sub(r'\s+', '_', safe_title)
+        
+        return success({
+            "stream_url": stream.url,
+            "title":      yt.title,
+            "author":     yt.author,
+            "duration":   yt.length,
+            "thumbnail":  yt.thumbnail_url,
+            "filename":   f"{safe_title}.mp3",
+            "filesize":   stream.filesize,
+            "bitrate":    stream.abr,
+        })
+    except Exception as e:
+        return error(str(e), 500)
