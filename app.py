@@ -18,6 +18,8 @@ def index():
     return {
         "app": "LightMusic API",
         "version": "1.0",
+        "Sumber": "https://ytmusicapi.readthedocs.io/en/stable/index.html",
+        "dev":"natgul",
         "endpoints": [
             "GET /search?q=query&type=songs",
             "GET /song/<video_id>",
