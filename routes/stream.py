@@ -9,8 +9,9 @@ def get_stream_url(video_id):
         'format': 'bestaudio[ext=m4a]/bestaudio/best',
         'quiet': True,
         'no_warnings': True,
-        'extract_flat': False,
+        'cookiefile': 'cookies.txt',  # pakai file cookies
     }
+        
     url = f"https://www.youtube.com/watch?v={video_id}"
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
