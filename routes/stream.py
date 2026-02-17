@@ -1,29 +1,46 @@
 from flask import Blueprint, Response
 from utils.response import success, error
 from ytmusicapi import YTMusic
-from urllib.parse import parse_qs, unquote
 import yt_dlp
 import requests
+import tempfile
+import os
 
 stream_bp = Blueprint('stream', __name__)
 ytm = YTMusic()
 
-def get_stream_url(video_id):
-    """Gunakan yt-dlp hanya untuk extract URL yang sudah di-decode."""
-    ydl_opts = {
+def get_ydl_opts():
+    """Buat ydl_opts dengan cookies dari environment variable."""
+    opts = {
         'format': 'bestaudio/best',
         'quiet': True,
         'no_warnings': True,
-        'cookiefile': 'cookies.txt',
-        'extract_flat': False,
         'skip_download': True,
-        # Paksa pakai web client biasa, bukan YouTube Music
         'extractor_args': {
             'youtube': {
-                'player_client': ['web', 'android'],
+                'player_client': ['tv_embedded', 'web'],
             }
         },
     }
+
+    cookies_content = os.environ.get('YT_COOKIES', '')
+    if cookies_content:
+        # Tulis cookies ke file temporary di server
+        tmp = tempfile.NamedTemporaryFile(
+            mode='w', suffix='.txt', delete=False, encoding='utf-8'
+        )
+        tmp.write(cookies_content)
+        tmp.close()
+        opts['cookiefile'] = tmp.name
+    elif os.path.exists('cookies.txt'):
+        # Fallback ke file lokal (untuk development)
+        opts['cookiefile'] = 'cookies.txt'
+
+    return opts
+
+
+def get_stream_url(video_id):
+    ydl_opts = get_ydl_opts()
     url = f"https://music.youtube.com/watch?v={video_id}"
     with yt_dlp.YoutubeDL(ydl_opts) as ydl:
         info = ydl.extract_info(url, download=False)
@@ -36,6 +53,7 @@ def get_stream_url(video_id):
             "title":      info.get('title', ''),
         }
 
+
 @stream_bp.route('/stream/<video_id>')
 def do_stream(video_id):
     try:
@@ -47,15 +65,10 @@ def do_stream(video_id):
 
 @stream_bp.route('/play/<video_id>')
 def play(video_id):
-    """
-    Proxy audio stream langsung ke Flutter/browser.
-    Flutter tinggal pakai URL: /play/<video_id>
-    """
     try:
         data = get_stream_url(video_id)
         stream_url = data['stream_url']
 
-        # Proxy stream dari Google ke client
         req = requests.get(stream_url, stream=True, headers={
             'User-Agent': 'Mozilla/5.0',
             'Referer': 'https://music.youtube.com/',
