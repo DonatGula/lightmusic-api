@@ -515,7 +515,9 @@
 
 <script>
   // ── CONFIG ──────────────────────────────────────────────────
-  const BASE = 'https://lightmusic.up.railway.app';
+  const BASE = window.location.hostname === 'localhost' 
+    ? 'http://localhost:5000'
+    : 'https://lightmusic.up.railway.app';
   // Ganti dengan URL Railway kamu di atas ↑
 
   let currentEndpoint = 'search';
