@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LightMusic — API Explorer</title>
-<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans&family=VT323&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Oswald:wght@200..700&display=swap" rel="stylesheet">
 <style>
 /* ════════════════════════════════════════════
    WIN98 / RETRO OS THEME
@@ -75,7 +77,7 @@
 body{
   background:var(--desktop);
   font-family:'Pixelify Sans','VT323','Courier New',monospace;
-  font-size:13px; color:var(--text);
+  font-size:15px; color:var(--text);
   min-height:100vh;
   display:grid;
   grid-template-columns:280px 1fr;
@@ -114,7 +116,7 @@ body{
   color:var(--title-txt);
   padding:3px 6px;
   display:flex; align-items:center; gap:4px;
-  font-size:12px; font-weight:bold;
+  font-size:15px; font-weight:bold;
   user-select:none;
 }
 .titlebar-icon{font-size:14px; margin-right:2px;}
@@ -128,7 +130,7 @@ body{
   border-right: 1px solid var(--border-dd);
   border-bottom:1px solid var(--border-dd);
   display:flex; align-items:center; justify-content:center;
-  font-size:9px; cursor:pointer; color:var(--text);
+  font-size:15px; cursor:pointer; color:var(--text);
   line-height:1;
 }
 .wc:hover{background:#c0c0ff;}
@@ -141,7 +143,7 @@ body{
   border-bottom:2px solid var(--border-dd);
   padding:3px 14px;
   font-family:'Pixelify Sans',monospace;
-  font-size:12px; color:var(--text);
+  font-size:15px; color:var(--text);
   cursor:pointer; letter-spacing:0.3px;
   min-width:75px; text-align:center;
 }
@@ -167,7 +169,7 @@ body{
   border-bottom:2px solid var(--border-lt);
   padding:3px 6px;
   font-family:'Pixelify Sans',monospace;
-  font-size:12px; color:var(--text);
+  font-size:15px; color:var(--text);
   outline:none; width:100%;
 }
 .winput:focus{outline:1px dotted var(--accent);}
@@ -181,7 +183,7 @@ body{
   border-bottom:2px solid var(--border-lt);
   padding:3px 6px;
   font-family:'Pixelify Sans',monospace;
-  font-size:12px; color:var(--text);
+  font-size:15px; color:var(--text);
   outline:none; width:100%; cursor:pointer;
 }
 
@@ -203,7 +205,7 @@ body{
   border-bottom:2px solid var(--border-dd);
   padding:2px 10px;
   font-family:'Pixelify Sans',monospace;
-  font-size:13px; font-weight:bold;
+  font-size:15px; font-weight:bold;
   cursor:pointer; display:flex; align-items:center; gap:4px;
   color:var(--text);
 }
@@ -217,7 +219,7 @@ body{
   border-bottom:2px solid var(--border-lt);
   padding:2px 8px;
   font-family:'Pixelify Sans',monospace;
-  font-size:11px; color:var(--teal);
+  font-size:15px; color:var(--teal);
   overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
 }
 .sys-tray{
@@ -228,7 +230,7 @@ body{
   border-right: 2px solid var(--border-lt);
   border-bottom:2px solid var(--border-lt);
   padding:2px 8px;
-  font-size:11px; color:var(--text2);
+  font-size:15px; color:var(--text2);
 }
 .sys-dot{
   width:6px; height:6px;
@@ -263,13 +265,13 @@ body{
   border-left:  2px solid var(--border-dd);
   border-right: 2px solid var(--border-lt);
   border-bottom:2px solid var(--border-lt);
-  overflow-y:auto; max-height:180px;
+  overflow-y:auto; max-height:250px;
   margin-bottom:4px;
 }
 .ep-item{
   display:flex; align-items:center; gap:6px;
   padding:4px 6px; cursor:pointer; border-bottom:1px solid #e0e0e0;
-  font-size:11px;
+  font-size:15px;
 }
 .ep-item:hover,.ep-item.active{
   background:var(--select-bg);
@@ -280,7 +282,7 @@ body{
   font-size:9px; padding:1px 4px; font-weight:bold;
   background:#008000; color:#fff; letter-spacing:0.5px;
 }
-.ep-muted{font-size:10px;color:var(--muted);}
+.ep-muted{font-size:15px;color:var(--muted);}
 .ep-item.active .ep-badge{background:#88cc88;}
 
 /* Quick song list */
@@ -295,7 +297,7 @@ body{
 .song-item{
   display:flex; align-items:center; gap:6px;
   padding:5px 6px; cursor:pointer; border-bottom:1px solid #e8e8e8;
-  font-size:11px;
+  font-size:15px;
 }
 .song-item:hover{background:var(--select-bg);color:var(--select-txt);}
 .song-item.playing{background:var(--select-bg);color:var(--select-txt);}
@@ -326,13 +328,13 @@ body{
   border-bottom:2px solid var(--border-lt);
   padding:10px;
   font-family:'Pixelify Sans','Courier New',monospace;
-  font-size:12px; line-height:1.7;
+  font-size:15px; line-height:1.7;
 }
 
 /* Empty state */
 .empty98{
   display:flex;flex-direction:column;align-items:center;
-  justify-content:center;height:100%;gap:12px;
+  justify-content:center;height:100%;gap:15px;
 }
 .empty98-icon{font-size:48px;filter:grayscale(0.3);}
 .empty98-title{font-size:16px;font-weight:bold;color:var(--text);}
@@ -370,7 +372,7 @@ body{
 .tag98.err {color:var(--error);}
 .cpybtn{
   margin-left:auto;
-  font-size:10px; padding:1px 8px;
+  font-size:15px; padding:1px 8px;
   background:var(--btn-face); color:var(--text);
   border-top:   1px solid var(--border-lt);
   border-left:  1px solid var(--border-lt);
@@ -389,7 +391,7 @@ body{
 .json98{
   white-space:pre; overflow-x:auto;
   font-family:'Pixelify Sans','Courier New',monospace;
-  font-size:12px; line-height:1.7;
+  font-size:15px; line-height:1.7;
 }
 .jk{color:#000080;font-weight:bold;}
 .js{color:#008000;}
@@ -664,30 +666,7 @@ input[type=range].vol98::-webkit-slider-thumb{
 
 <!-- MAIN -->
 <div class="main">
-
-  <!-- Response Window -->
-  <div class="win resp-win">
-    <div class="titlebar">
-      <span class="titlebar-icon">🖥</span>
-      <span class="titlebar-text">JSON Response — LightMusic API Explorer</span>
-      <div class="wc">_</div><div class="wc">□</div><div class="wc">✕</div>
-    </div>
-    <div class="resp-body" id="respBody">
-      <div class="empty98">
-        <div class="empty98-icon">💾</div>
-        <div class="empty98-title">LightMusic API Explorer</div>
-        <div class="empty98-sub">Pilih endpoint di sidebar<br>atau ketik pencarian untuk memulai</div>
-      </div>
-    </div>
-    <!-- Status bar -->
-    <div class="statusbar">
-      <div class="sb-part" id="sbStatus">Ready</div>
-      <div class="sb-part" id="sbMs">—</div>
-      <div class="sb-part" id="sbSize">—</div>
-    </div>
-  </div>
-
-  <!-- Audio Player Window -->
+   <!-- Audio Player Window -->
   <div class="win player-win" id="playerWin">
     <div class="titlebar">
       <span class="titlebar-icon">🎵</span>
@@ -716,6 +695,28 @@ input[type=range].vol98::-webkit-slider-thumb{
       </div>
     </div>
   </div>
+  <!-- Response Window -->
+  <div class="win resp-win">
+    <div class="titlebar">
+      <span class="titlebar-icon">🖥</span>
+      <span class="titlebar-text">JSON Response — LightMusic API Explorer</span>
+      <div class="wc">_</div><div class="wc">□</div><div class="wc">✕</div>
+    </div>
+    <div class="resp-body" id="respBody">
+      <div class="empty98">
+        <div class="empty98-icon">💾</div>
+        <div class="empty98-title">LightMusic API Explorer</div>
+        <div class="empty98-sub">Pilih endpoint di sidebar<br>atau ketik pencarian untuk memulai</div>
+      </div>
+    </div>
+    <!-- Status bar -->
+    <div class="statusbar">
+      <div class="sb-part" id="sbStatus">Ready</div>
+      <div class="sb-part" id="sbMs">—</div>
+      <div class="sb-part" id="sbSize">—</div>
+    </div>
+  </div>
+
 
 </div><!-- /main -->
 
@@ -804,21 +805,6 @@ async function hit(url){
   }
 }
 
-// Render
-function renderJson(data,url){
-  const m=data._m||{}; const c={...data}; delete c._m;
-  const ok=m.code>=200&&m.code<300&&data.status==='success';
-  document.getElementById('respBody').innerHTML=`
-    <div class="resp-meta">
-      <span class="tag98 ${ok?'ok':'err'}">${ok?`✓ ${m.code} OK`:`✗ ${m.code||'ERR'}`}</span>
-      <span class="tag98">${m.ms}ms</span>
-      <span class="tag98">${JSON.stringify(c).length} B</span>
-      <button class="cpybtn" onclick="copyJ()">Copy</button>
-    </div>
-    <div class="json98" id="jOut">${hl(JSON.stringify(c,null,2))}</div>`;
-  window._lj=c;
-}
-
 function renderCards(items){
   const wrap=document.createElement('div');
   wrap.className='cards98';
@@ -838,6 +824,23 @@ function renderCards(items){
   });
   document.getElementById('respBody').appendChild(wrap);
 }
+
+// Render
+function renderJson(data,url){
+  const m=data._m||{}; const c={...data}; delete c._m;
+  const ok=m.code>=200&&m.code<300&&data.status==='success';
+  document.getElementById('respBody').innerHTML=`
+    <div class="resp-meta">
+      <span class="tag98 ${ok?'ok':'err'}">${ok?`✓ ${m.code} OK`:`✗ ${m.code||'ERR'}`}</span>
+      <span class="tag98">${m.ms}ms</span>
+      <span class="tag98">${JSON.stringify(c).length} B</span>
+      <button class="cpybtn" onclick="copyJ()">Copy</button>
+    </div>
+    <div class="json98" id="jOut">${hl(JSON.stringify(c,null,2))}</div>`;
+  window._lj=c;
+}
+
+
 
 // Play
 async function quickPlay(id,title,artist){
