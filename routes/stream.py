@@ -1,7 +1,8 @@
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response, request, current_app
 from utils.response import success, error
 from pytubefix import YouTube
 import requests
+import re
 
 stream_bp = Blueprint('stream', __name__)
 
@@ -11,36 +12,83 @@ HEADERS = {
     'Origin':     'https://www.youtube.com',
 }
 
+def get_cache():
+    return current_app.config.get('CACHE')
+
 def get_best_stream(video_id: str):
-    yt = YouTube(f"https://www.youtube.com/watch?v={video_id}")
-    
-    # Prioritas: mp4 128kbps (itag 140) — paling kompatibel
+    """Ambil stream dengan cache 5 jam."""
+    cache     = get_cache()
+    cache_key = f'stream_{video_id}'
+
+    # Cek cache dulu
+    cached = cache.get(cache_key)
+    if cached:
+        print(f'✅ Cache hit: {video_id}')
+        return cached
+
+    print(f'📡 Fetching stream: {video_id}')
+    yt = YouTube(f'https://www.youtube.com/watch?v={video_id}')
+
     stream = (
-        yt.streams.get_by_itag(140) or                                          # mp4 128kbps
-        yt.streams.get_by_itag(139) or                                          # mp4 48kbps
-        yt.streams.filter(only_audio=True, mime_type="audio/mp4").order_by('abr').last() or
+        yt.streams.get_by_itag(140) or   # mp4 128kbps — terbaik
+        yt.streams.get_by_itag(139) or   # mp4 48kbps
+        yt.streams.filter(only_audio=True, mime_type='audio/mp4').order_by('abr').last() or
         yt.streams.filter(only_audio=True).order_by('abr').last()
     )
-    
+
     if not stream:
-        raise Exception("Tidak ada stream tersedia")
-    
-    return stream, yt
+        raise Exception('Tidak ada stream tersedia')
+
+    result = {
+        'url':       stream.url,
+        'title':     yt.title,
+        'author':    yt.author,
+        'duration':  yt.length,
+        'thumbnail': yt.thumbnail_url,
+        'bitrate':   stream.abr,
+        'mime_type': stream.mime_type,
+        'itag':      stream.itag,
+        'filesize':  stream.filesize,
+    }
+
+    # Simpan ke cache 5 jam
+    cache.set(cache_key, result, timeout=18000)
+    print(f'💾 Cached: {video_id}')
+    return result
 
 
 @stream_bp.route('/stream/<video_id>')
 def do_stream(video_id):
     try:
-        stream, yt = get_best_stream(video_id)
+        data = get_best_stream(video_id)
         return success({
-            "stream_url": stream.url,
-            "title":      yt.title,
-            "author":     yt.author,
-            "duration":   yt.length,
-            "thumbnail":  yt.thumbnail_url,
-            "bitrate":    stream.abr,
-            "mime_type":  stream.mime_type,
-            "itag":       stream.itag,
+            'stream_url': data['url'],
+            'title':      data['title'],
+            'author':     data['author'],
+            'duration':   data['duration'],
+            'thumbnail':  data['thumbnail'],
+            'bitrate':    data['bitrate'],
+            'mime_type':  data['mime_type'],
+        })
+    except Exception as e:
+        return error(str(e), 500)
+
+
+@stream_bp.route('/download/<video_id>')
+def download_info(video_id):
+    try:
+        data      = get_best_stream(video_id)
+        safe      = re.sub(r'[^\w\s-]', '', data['title']).strip()
+        safe      = re.sub(r'\s+', '_', safe)
+        return success({
+            'stream_url': data['url'],
+            'title':      data['title'],
+            'author':     data['author'],
+            'duration':   data['duration'],
+            'thumbnail':  data['thumbnail'],
+            'filename':   f'{safe}.mp3',
+            'filesize':   data['filesize'] or 0,
+            'bitrate':    data['bitrate'],
         })
     except Exception as e:
         return error(str(e), 500)
@@ -48,112 +96,82 @@ def do_stream(video_id):
 
 @stream_bp.route('/play/<video_id>')
 def play(video_id):
-    """
-    Railway fetch dari Google, lalu pipe ke client.
-    Solve masalah IP mismatch.
-    Pakai range request agar seek bisa jalan.
-    """
     try:
-        stream, yt = get_best_stream(video_id)
-        stream_url = stream.url
+        data = get_best_stream(video_id)
 
-        # Forward range header dari client (untuk seek)
         req_headers = dict(HEADERS)
         if 'Range' in request.headers:
             req_headers['Range'] = request.headers['Range']
 
         r = requests.get(
-            stream_url,
+            data['url'],
             headers=req_headers,
             stream=True,
             timeout=30,
         )
 
-        # Tentukan status code (206 untuk partial content)
-        status_code = r.status_code
+        # URL expired (403) → hapus cache, ambil fresh
+        if r.status_code == 403:
+            cache     = get_cache()
+            cache_key = f'stream_{video_id}'
+            cache.delete(cache_key)
+            print(f'🔄 Cache expired, refresh: {video_id}')
 
-        # Response headers ke client
+            data = get_best_stream(video_id)  # fresh URL
+            r    = requests.get(
+                data['url'],
+                headers=req_headers,
+                stream=True,
+                timeout=30,
+            )
+
         resp_headers = {
-            'Content-Type':                  r.headers.get('Content-Type', 'audio/mp4'),
-            'Accept-Ranges':                 'bytes',
-            'Access-Control-Allow-Origin':   '*',
-            'Cache-Control':                 'no-cache',
+            'Content-Type':                r.headers.get('Content-Type', 'audio/mp4'),
+            'Accept-Ranges':               'bytes',
+            'Access-Control-Allow-Origin': '*',
+            'Cache-Control':               'no-cache',
         }
         if 'Content-Length' in r.headers:
             resp_headers['Content-Length'] = r.headers['Content-Length']
         if 'Content-Range' in r.headers:
-            resp_headers['Content-Range'] = r.headers['Content-Range']
+            resp_headers['Content-Range']  = r.headers['Content-Range']
 
         def generate():
-            for chunk in r.iter_content(chunk_size=16384):  # 16KB chunks
+            for chunk in r.iter_content(chunk_size=16384):
                 if chunk:
                     yield chunk
 
-        return Response(
-            generate(),
-            status=status_code,
-            headers=resp_headers,
-        )
+        return Response(generate(), status=r.status_code, headers=resp_headers)
 
     except Exception as e:
         return error(str(e), 500)
 
 
-@stream_bp.route('/play/<video_id>', methods=['OPTIONS'])
-def play_options(video_id):
-    """Handle CORS preflight."""
-    return Response(headers={
-        'Access-Control-Allow-Origin':  '*',
-        'Access-Control-Allow-Headers': 'Range, Content-Type',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-    })
-
-@stream_bp.route('/download/<video_id>')
-def download(video_id):
-    """Return info untuk download — sama seperti /stream tapi dengan filename."""
-    try:
-        stream, yt = get_best_stream(video_id)
-        
-        # Bersihkan judul untuk nama file
-        import re
-        safe_title = re.sub(r'[^\w\s-]', '', yt.title).strip()
-        safe_title = re.sub(r'\s+', '_', safe_title)
-        
-        return success({
-            "stream_url": stream.url,
-            "title":      yt.title,
-            "author":     yt.author,
-            "duration":   yt.length,
-            "thumbnail":  yt.thumbnail_url,
-            "filename":   f"{safe_title}.mp3",
-            "filesize":   stream.filesize,
-            "bitrate":    stream.abr,
-        })
-    except Exception as e:
-        return error(str(e), 500)
-    
 @stream_bp.route('/download-file/<video_id>')
 def download_file(video_id):
-    """
-    Railway yang download dari Google lalu pipe ke Flutter.
-    Solve masalah 403 IP mismatch saat Flutter download langsung.
-    """
     try:
-        stream, yt = get_best_stream(video_id)
-        
-        import re
-        safe_title = re.sub(r'[^\w\s-]', '', yt.title).strip()
-        safe_title = re.sub(r'\s+', '_', safe_title)
-        filename   = f"{safe_title}.mp3"
+        data = get_best_stream(video_id)
+
+        safe     = re.sub(r'[^\w\s-]', '', data['title']).strip()
+        safe     = re.sub(r'\s+', '_', safe)
+        filename = f'{safe}.mp3'
+
+        # Cek URL masih valid
+        test = requests.head(data['url'], headers=HEADERS, timeout=10)
+        if test.status_code == 403:
+            # Hapus cache, ambil fresh
+            cache = get_cache()
+            cache.delete(f'stream_{video_id}')
+            data  = get_best_stream(video_id)
 
         def generate():
             r = requests.get(
-                stream.url,
+                data['url'],
                 headers=HEADERS,
                 stream=True,
                 timeout=60,
             )
-            for chunk in r.iter_content(chunk_size=65536):  # 64KB chunks
+            for chunk in r.iter_content(chunk_size=65536):
                 if chunk:
                     yield chunk
 
@@ -163,10 +181,25 @@ def download_file(video_id):
             headers={
                 'Content-Type':                'audio/mp4',
                 'Content-Disposition':         f'attachment; filename="{filename}"',
-                'Content-Length':              str(stream.filesize or ''),
+                'Content-Length':              str(data['filesize'] or ''),
                 'Access-Control-Allow-Origin': '*',
-                'Cache-Control':               'no-cache',
             }
         )
     except Exception as e:
         return error(str(e), 500)
+
+
+@stream_bp.route('/cache/clear/<video_id>')
+def clear_cache(video_id):
+    """Manual clear cache untuk video tertentu."""
+    cache = get_cache()
+    cache.delete(f'stream_{video_id}')
+    return success({'cleared': video_id})
+
+
+@stream_bp.route('/cache/clear-all')
+def clear_all_cache():
+    """Clear semua cache."""
+    cache = get_cache()
+    cache.clear()
+    return success({'cleared': 'all'})

@@ -1,22 +1,30 @@
-from flask import Blueprint, request
-from services.ytmusic import search
+from flask import Blueprint, request, current_app
 from utils.response import success, error
+from services.ytmusic import search as yt_search
 
 search_bp = Blueprint('search', __name__)
 
 @search_bp.route('/search')
 def do_search():
-    q = request.args.get('q', '').strip()
-    type_ = request.args.get('type', 'songs')  # songs/artists/albums
+    q     = request.args.get('q', '').strip()
+    type_ = request.args.get('type', 'songs')
     limit = int(request.args.get('limit', 20))
 
     if not q:
-        return error("Parameter 'q' wajib diisi")
-    if type_ not in ['songs', 'artists', 'albums', 'playlists']:
-        return error("type harus: songs, artists, albums, atau playlists")
+        return error('Query kosong', 400)
+
+    # Cache search result 30 menit
+    cache     = current_app.config.get('CACHE')
+    cache_key = f'search_{q}_{type_}_{limit}'
+    cached    = cache.get(cache_key)
+
+    if cached:
+        print(f'✅ Search cache hit: {q}')
+        return success(cached)
 
     try:
-        results = search(q, filter_type=type_, limit=limit)
-        return success(results, f"Ditemukan {len(results)} hasil")
+        results = yt_search(q, filter_type=type_, limit=limit)
+        cache.set(cache_key, results, timeout=1800)  # 30 menit
+        return success(results)
     except Exception as e:
         return error(str(e), 500)
